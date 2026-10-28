@@ -5,8 +5,7 @@ Read README.md's domain model first. A ScreeningReport belongs to a Tenant, a Te
 a Property, and a Property belongs to a LandlordAccount. A PropertyManager is scoped to exactly
 one LandlordAccount.
 
-A PropertyManager may view a ScreeningReport only if that report's tenant lives in a property
-under the PropertyManager's own landlord account.
+Work out from that hierarchy which boundary actually gates access to a ScreeningReport.
 """
 from app.models import PropertyManager, ScreeningReport, Property, Tenant
 

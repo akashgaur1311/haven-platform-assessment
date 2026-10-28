@@ -13,10 +13,12 @@ LandlordAccount  (the billing unit)
 PropertyManager  (scoped to exactly one LandlordAccount)
 ```
 
-`tenant_id` is not the billing unit. A Property Manager's access boundary is their landlord
-account, not a single property or tenant. Resources today are tagged with `tenant_id` out of
-habit — that's the wrong key for cost attribution, and an access check written against "does
-this tenant belong to this manager" misses the actual boundary.
+A `LandlordAccount` is the billing unit — every property, every tenant, every report underneath
+it rolls up to exactly one. A `PropertyManager` is scoped to exactly one `LandlordAccount` and
+everything under it.
+
+This codebase currently tags and checks access using whatever ID happened to be on hand when
+each piece was written — that reflects how it was built, not a spec to replicate.
 
 ## What not to modify
 
