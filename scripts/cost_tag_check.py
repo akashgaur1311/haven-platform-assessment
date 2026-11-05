@@ -1,32 +1,41 @@
-"""
-B2, part 2 — implement the cost-tagging check.
-
-Read fixtures/plan.json for the shape of a `terraform show -json` plan: a `resource_changes`
-list, where each entry has a `type`, an `address`, and `change.after.tags`.
-
-Implement check_plan() so it:
-  - Looks at every resource being created or changed (skip anything not in
-    change.actions, e.g. a pure "no-op" / "read" change).
-  - Fails (returns a non-zero exit code) if the resource is missing the tag that identifies
-    the real billing unit, per README.md's domain model — not whatever tag the resource
-    happens to already carry.
-  - Is idempotent: running this twice against the same plan file produces the same result,
-    with no duplicate output and no flipped pass/fail.
-  - Prints which specific resource address(es) are missing the tag.
-
-Run manually: python scripts/cost_tag_check.py fixtures/plan.json
-"""
 import json
 import sys
 
+BILLING_TAG = "landlord_account_id"
+
 
 def check_plan(plan_path: str) -> int:
-    """
-    Returns an exit code: 0 if every taggable resource being created/changed has
-    `landlord_account_id`, non-zero otherwise.
-    """
-    raise NotImplementedError("Implement this.")
+    with open(plan_path, "r", encoding="utf-8") as file:
+        plan = json.load(file)
+
+    missing = []
+
+    for resource in plan.get("resource_changes", []):
+        change = resource.get("change") or {}
+        actions = change.get("actions", [])
+
+        # Skip resources that are not being created or changed.
+        if not any(action in ("create", "update") for action in actions):
+            continue
+
+        after = change.get("after") or {}
+        tags = after.get("tags") or {}
+
+        if not tags.get(BILLING_TAG):
+            missing.append(resource.get("address", "<unknown>"))
+
+    if missing:
+        for address in sorted(missing):
+            print(f"Missing {BILLING_TAG}: {address}")
+        return 1
+
+    print("All changed resources have the required billing tag.")
+    return 0
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print(f"Usage: {sys.argv[0]} <terraform-plan.json>")
+        sys.exit(2)
+
     sys.exit(check_plan(sys.argv[1]))

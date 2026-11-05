@@ -1,12 +1,15 @@
 # Design Notes
 
-## B2 — idempotency key
+## B0 — Terraform resource identity
+Used for_each with landlord account IDs as stable keys instead of count indexes. Added moved blocks to preserve existing resource addresses and avoid unnecessary bucket replacement.
 
-State exactly what key your `cost_tag_check.py` uses to decide a plan has already been
-checked/reported on. Use the word "idempotency" in your explanation.
+## B1 — S3 lifecycle cost
+Glacier Flexible Retrieval has a 90-day minimum storage duration. Deleting objects early can cause additional charges. Archival must respect the application's deletion requirements.
 
-<!-- Your answer here -->
+## B2 — Access control
+A ScreeningReport belongs to a Tenant, which belongs to a Property. Access is controlled by comparing the Property's landlord_account_id with the PropertyManager's landlord_account_id. Missing records fail closed.
 
-## Any other decision with a non-obvious alternative
+## Cost tagging
+The required billing tag is landlord_account_id because LandlordAccount is the billing unit.
 
-<!-- Your answer here -->
+The cost-tag check examines created and updated resources, reports missing billing tags, and uses deterministic output to maintain idempotency.
